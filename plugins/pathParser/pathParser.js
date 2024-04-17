@@ -51,6 +51,30 @@ var rules = [
 /* ----------------------------------------------------------------------------
 // DO NOT EDIT BELOW!
 ---------------------------------------------------------------------------- */
+function debug(message) {
+  if (!DEBUG) {
+    return;
+  }
+
+  if (typeof message === "string") {
+    bufferedOutput.push(message);
+    return;
+  }
+
+  if (typeof message === "function") {
+    message = message();
+  }
+
+  bufferedOutput = bufferedOutput.concat(message);
+}
+
+function logDebug(logCb) {
+  if (DEBUG && bufferedOutput !== null && bufferedOutput !== "") {
+    logCb("[PathParser] " + bufferedOutput.join('\n> '));
+    bufferedOutput = [];
+  }
+}
+
 function main() {
   try {
     switch (getTask(input.Args)) {
@@ -82,7 +106,7 @@ function main() {
       case "scene":
         var id = getId(input.Args);
         initBasePaths();
-        matchRuleWithSceneId(id, applyRule);
+        matchRuleWithSceneId(id);
         break;
 
       case "image":
@@ -90,13 +114,21 @@ function main() {
         initBasePaths();
         break;
 
+      case "gallery":
+        var id = getId(input.Args);
+        initBasePaths();
+        matchRuleWithGalleryId(id);
+        break;
+
       default:
         throw "Unsupported task";
     }
   } catch (e) {
+    logDebug(log.Error);
     return { Output: "error", Error: e };
   }
 
+  logDebug(log.Debug);
   return { Output: "ok" };
 }
 
@@ -125,6 +157,9 @@ function getTask(inputArgs) {
 
     case "Image.Create.Post":
       return "image";
+
+    case "Gallery.Create.Post":
+      return "gallery";
   }
 }
 
@@ -218,9 +253,14 @@ function runRules(tag) {
 
   var query =
     "\
-  query FindScenes($sceneFilter: SceneFilterType) {\
+  query FindIds($sceneFilter: SceneFilterType, $galleryFilter: GalleryFilterType) {\
     findScenes(scene_filter: $sceneFilter) {\
       scenes {\
+        id\
+      }\
+    }\
+    findGalleries(gallery_filter: $galleryFilter) {\
+      galleries {\
         id\
       }\
     }\
@@ -233,16 +273,30 @@ function runRules(tag) {
         modifier: "INCLUDES",
       },
     },
+    galleryFilter: {
+      tags: {
+        value: tagId,
+        modifier: "INCLUDES"
+      }
+    }
   };
 
   var result = gql.Do(query, variables);
-  if (!result.findScenes || result.findScenes.scenes.length == 0) {
-    throw "No scenes found with tag " + tag;
+  if ((!result.findGalleries || result.findGalleries.galleries.length == 0) && 
+      (!result.findScenes || result.findScenes.scenes.length == 0)) {
+    throw "No scenes or galleries found with tag " + tag;
   }
 
-  result.findScenes.scenes.forEach(function (scene) {
-    matchRuleWithSceneId(scene.id, applyRule);
-  });
+  if (result.findScenes) {
+    result.findScenes.scenes.forEach(function (scene) {
+      matchRuleWithSceneId(scene.id);
+    });
+  }
+  if (result.findGalleries) {
+    result.findGalleries.galleries.forEach(function (gallery){
+      matchRuleWithGalleryId(gallery.id);
+    })
+  }
 }
 
 // Get scene/image id from input args
@@ -254,8 +308,25 @@ function getId(inputArgs) {
   return id;
 }
 
+function matchFilePaths(id, files, applyRuleCb) {
+  
+  for (var i = 0; i < files.length; i++) {
+    try {
+      matchRuleWithPath(sceneId, result.findScene.files[i].path, applyRuleCb);
+      logDebug(log.Info);
+      return;
+    } catch (e) {
+      debug("Error matching rules for " + id + ": " + e.toString());
+      logDebug(log.Error);
+      continue;
+    }
+  }
+  logDebug(log.Info);
+  throw "No rule matches id: " + sceneId;
+}
+
 // Apply callback function to first matching rule for id
-function matchRuleWithSceneId(sceneId, cb) {
+function matchRuleWithSceneId(sceneId) {
   var query =
     "\
   query FindScene($findSceneId: ID) {\
@@ -275,29 +346,34 @@ function matchRuleWithSceneId(sceneId, cb) {
     throw "Missing scene for id: " + sceneId;
   }
 
-  for (var i = 0; i < result.findScene.files.length; i++) {
-    try {
-      matchRuleWithPath(sceneId, result.findScene.files[i].path, cb);
+  matchFilePaths(sceneId, findScene.files, applySceneRule);
+}
 
-      if (DEBUG && bufferedOutput !== null && bufferedOutput !== "") {
-        log.Info("[PathParser] " + bufferedOutput);
-      }
+function matchRuleWithGalleryId(galleryId) {
+  var query =
+    "\
+  query FindGallery($findGalleryId: ID) {\
+    findGallery(id: $findGalleryId) {\
+      files {\
+        path\
+      }\
+    }\
+  }";
 
-      return;
-    } catch (e) {
-      continue;
-    }
+  var variables = {
+    findGalleryId: galleryId,
+  };
+
+  var result = gql.Do(query, variables);
+  if (!result.findGallery || result.findGallery.files.length == 0) {
+    throw "Missing gallery for id: " + galleryId;
   }
 
-  if (DEBUG && bufferedOutput !== null && bufferedOutput !== "") {
-    log.Info("[PathParser] " + bufferedOutput);
-  }
-
-  throw "No rule matches id: " + sceneId;
+  matchFilePaths(galleryId, findScene.files, applySceneRule);
 }
 
 // Apply callback to first matching rule for path
-function matchRuleWithPath(sceneId, path, cb) {
+function matchRuleWithPath(id, path, applyRuleCb) {
   // Remove base path
   for (var i = 0; i < BASE_PATHS.length; i++) {
     if (path.slice(0, BASE_PATHS[i].length) === BASE_PATHS[i]) {
@@ -305,9 +381,7 @@ function matchRuleWithPath(sceneId, path, cb) {
     }
   }
 
-  if (DEBUG) {
-    bufferedOutput = path + "\n";
-  }
+  debug(path);
 
   // Split paths into parts
   var parts = path.split(/[\\/]/);
@@ -319,19 +393,16 @@ function matchRuleWithPath(sceneId, path, cb) {
   );
 
   for (var i = 0; i < rules.length; i++) {
-    var sceneData = testRule(rules[i].pattern, parts);
-    if (sceneData !== null) {
-      if (DEBUG) {
-        bufferedOutput += "Rule: " + rules[i].name + "\n";
-      }
-
+    var data = testRule(rules[i].pattern, parts);
+    if (data !== null) {
+      debug("Rule: " + rules[i].name)
       log.Debug("[PathParser] Rule: " + rules[i].name + "\nPath: " + path);
-      cb(sceneId, rules[i].fields, sceneData);
+      applyRuleCb(id, rules[i].fields, data);
       return;
     }
   }
 
-  bufferedOutput += "No matching rule!";
+  debug("No matching rule!");
   throw "No matching rule for path: " + path;
 }
 
@@ -405,32 +476,31 @@ function testPattern(pattern, part) {
 }
 
 // Apply rule
-function applyRule(sceneId, fields, data) {
+function applyRule(id, fields, data) {
   var any = false;
   var variables = {
     input: {
-      id: sceneId,
+      id: id,
     },
   };
 
-  if (DEBUG) {
+  debug(function () {
+    var messages = [];
     for (var i = 0; i < data.length; i++) {
-      bufferedOutput += "#" + i + ": " + data[i] + "\n";
+      messages.push("#" + i + ": " + data[i]);
     }
-  }
+    return messages;
+  })
 
   for (var field in fields) {
     var value = fields[field];
-    for (var i = data.length - 1; i >= 0; i--) {
-      value = value.replace("#" + i, data[i]);
-    }
+    value.replace(/#\d+/, function(matched) {
+      return data[parseInt(matched.substring(1))]
+    })
 
     switch (field) {
       case "title":
-        if (DEBUG) {
-          bufferedOutput += field + ": " + value + "\n";
-        }
-
+        debug(field + ": " + value);
         variables.input["title"] = value;
         any = true;
         continue;
@@ -440,12 +510,7 @@ function applyRule(sceneId, fields, data) {
         if (studioId == null) {
           continue;
         }
-
-        if (DEBUG) {
-          bufferedOutput += field + ": " + value + "\n";
-          bufferedOutput += "studio_id: " + studioId + "\n";
-        }
-
+        debug([field + ": " + value, "studio_id: " + studioId]);
         variables.input["studio_id"] = studioId;
         any = true;
         continue;
@@ -461,11 +526,7 @@ function applyRule(sceneId, fields, data) {
           variables.input["movies"] = [{}];
         }
 
-        if (DEBUG) {
-          bufferedOutput += field + ": " + value + "\n";
-          bufferedOutput += "movie_id: " + movieId + "\n";
-        }
-
+        debug([field + ": " + value, "movie_id: " + movieId]);
         variables.input["movies"][0]["movie_id"] = movieId;
         any = true;
         continue;
@@ -480,10 +541,7 @@ function applyRule(sceneId, fields, data) {
           variables.input["movies"] = [{}];
         }
 
-        if (DEBUG) {
-          bufferedOutput += "scene_index: " + sceneIndex + "\n";
-        }
-
+        debug("scene_index: " + sceneIndex)
         variables.input["movies"][0]["scene_index"] = sceneIndex;
         continue;
 
@@ -493,11 +551,7 @@ function applyRule(sceneId, fields, data) {
           continue;
         }
 
-        if (DEBUG) {
-          bufferedOutput += field + ": " + value + "\n";
-          bufferedOutput += "performer_ids: " + performers.join(", ") + "\n";
-        }
-
+        debug([field + ": " + value, "performer_ids: " + performers.join(", ")]);
         variables.input["performer_ids"] = performers;
         any = true;
         continue;
@@ -508,11 +562,7 @@ function applyRule(sceneId, fields, data) {
           continue;
         }
 
-        if (DEBUG) {
-          bufferedOutput += field + ": " + value + "\n";
-          bufferedOutput += "tag_ids: " + tags.join(", ") + "\n";
-        }
-
+        debug([field + ": " + value, "tag_ids: " + tags.join(", ")]);
         variables.input["tag_ids"] = tags;
         any = true;
         continue;
@@ -522,10 +572,10 @@ function applyRule(sceneId, fields, data) {
   // Test only
   if (DEBUG) {
     if (!any) {
-      bufferedOutput += "No fields to update!\n";
+      debug("No fields to update!");
     }
 
-    return;
+    return false;
   }
 
   // Remove movies if movie_id is missing
@@ -536,6 +586,31 @@ function applyRule(sceneId, fields, data) {
     delete variables.input["movies"];
   }
 
+  return variables;
+}
+
+var sceneFields = new Set(["title", "studio", "director", "studio", "movies", "tags", "performers"]);
+var galleryFields = new Set(["title", "studio", "photographer", "tags", "performers"]);
+var validFields = {
+  "gallery": galleryFields,
+  "scene": sceneFields
+}
+
+function validateFields(dataType, fields) {
+  if (!(dataType in validFields)) {
+    throw "Invalid data type " + dataType + " for validating fields";
+  }
+  var vFields = validFields[dataType];
+  
+  for (var field in fields) {
+    if (!vFields.has(field)) {
+      throw "Invalid field " + field + " for data type " + dataType;
+    }
+  }
+}
+
+function applySceneRule(id, fields, data) {
+  validateFields("scene", fields);
   // Apply updates
   var query =
     "\
@@ -545,6 +620,7 @@ function applyRule(sceneId, fields, data) {
     }\
   }";
 
+  var variables = applyRule(id, fields, data);
   if (!any) {
     throw "No fields to update for scene " + sceneId;
   }
@@ -552,6 +628,28 @@ function applyRule(sceneId, fields, data) {
   var result = gql.Do(query, variables);
   if (!result.sceneUpdate) {
     throw "Unable to update scene " + sceneId;
+  }
+}
+
+function applyGalleryRule(id, fields, data) {
+  validateFields("gallery", fields);
+  // Apply updates
+  var query =
+    "\
+  mutation Mutation($input: GalleryUpdateInput!) {\
+    galleryUpdate(input: $input) {\
+      id\
+    }\
+  }";
+
+  var variables = applyRule(id, fields, data);
+  if (!any) {
+    throw "No fields to update for gallery " + id;
+  }
+
+  var result = gql.Do(query, variables);
+  if (!result.galleryUpdate) {
+    throw "Unable to update gallery " + id;
   }
 }
 
@@ -681,5 +779,5 @@ function tryGetTag(tag) {
 
 var DEBUG = false;
 var BASE_PATHS = [];
-var bufferedOutput = "";
+var bufferedOutput = [];
 main();

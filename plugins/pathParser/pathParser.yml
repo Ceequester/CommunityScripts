@@ -10,6 +10,7 @@ hooks:
     description: Updates scene info whenever a new scene is added.
     triggeredBy:
       - Scene.Create.Post
+      - Gallery.Create.Post
 tasks:
   - name: Create Tags
     description: Create tags used by the path parser tasks.
