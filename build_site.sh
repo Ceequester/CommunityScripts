@@ -70,6 +70,3 @@ buildPlugin()
 find ./plugins -mindepth 1 -name *.yml | while read file; do
     buildPlugin "$file"
 done
-find ./themes -mindepth 1 -name *.yml | while read file; do
-    buildPlugin "$file"
-done
