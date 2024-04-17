@@ -6,24 +6,44 @@ var patterns = {
 
 var rules = [
   {
-    name: "Rule 1",
-    pattern: ["Specific Studio", null, null],
+    name: "1 Level Gallery Titling",
+    pattern: [["Websites", "Artists"], null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
     fields: {
-      studio: "#0",
+      studio: "#1",
       title: "#2",
     },
   },
   {
-    name: "Rule 2",
-    pattern: [
-      ["One Studio", "Another Studio"],
-      patterns.movieTitleAndYear,
-      patterns.sceneTitleAndPerformers,
-    ],
+    name: "2 Level Gallery Titling",
+    pattern: [["Websites", "Artists"], null, null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
+    fields: {
+      studio: "#1",
+      title: "#3",
+      tags: ["#2"],
+    },
+  },
+  {
+    name: "0 Level Gallery Titling",
+    pattern: ["Unknown Images", null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
     fields: {
       title: "#2",
-      studio: "#0",
-      performers: "#3",
+    },
+  },
+  {
+    name: "1 Level Gallery Titling",
+    pattern: ["Unknown Images", null, null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
+    fields: {
+      studio: "#2",
+      title: "#3",
+    },
+  },
+  {
+    name: "2 Level Gallery Titling",
+    pattern: ["Unknown Images", null, null, null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
+    fields: {
+      studio: "#2",
+      title: "#4",
+      tags: ["#3"],
     },
   },
 ];

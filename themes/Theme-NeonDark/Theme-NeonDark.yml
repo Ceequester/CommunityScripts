@@ -1,6 +1,0 @@
-name: Theme - NeonDark
-description: NeonDark Theme for Stash by Dankonite
-version: 1.0
-ui:
-  css:
-    - Theme-NeonDark.css
