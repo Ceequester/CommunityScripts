@@ -598,9 +598,9 @@ function createSet(fields) {
     return new Set(fields);
   } else {
     var temp = {
-      has: function(key) {
+      has: function (key) {
         return key in temp;
-      }
+      },
     };
     for (var i = 0; i < fields.length; i += 1) {
       temp[fields[i]] = true;
@@ -619,12 +619,12 @@ var sceneFields = createSet([
   "performers",
 ]);
 var galleryFields = createSet([
-    "title",
-    "studio",
-    "photographer",
-    "tags",
-    "performers",
-  ]);
+  "title",
+  "studio",
+  "photographer",
+  "tags",
+  "performers",
+]);
 
 var validFields = {
   gallery: galleryFields,
