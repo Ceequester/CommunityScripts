@@ -250,7 +250,7 @@ function runRules(tag) {
   var query =
     "\
   query FindIds($sceneFilter: SceneFilterType, $galleryFilter: GalleryFilterType) {\
-    findScenes(scene_filter: $sceneFilter) {\
+    findScenes(scene_filter: $sceneFilter, filter: { per_page: -1 }) {\
       scenes {\
         id\
         files {\
@@ -258,10 +258,13 @@ function runRules(tag) {
         }\
       }\
     }\
-    findGalleries(gallery_filter: $galleryFilter) {\
+    findGalleries(gallery_filter: $galleryFilter, filter: { per_page: -1 }) {\
       galleries {\
         id\
         files {\
+          path\
+        }\
+        folder {\
           path\
         }\
       }\
@@ -298,7 +301,11 @@ function runRules(tag) {
   }
   if (result.findGalleries) {
     result.findGalleries.galleries.forEach(function (gallery) {
-      matchFilePaths(gallery.id, gallery.files, applyGalleryRule);
+      matchFilePaths(
+        gallery.id,
+        gallery.files.concat([gallery.folder]),
+        applyGalleryRule
+      );
     });
   }
 }
@@ -336,6 +343,9 @@ function matchRuleWithGalleryId(id) {
       files {\
         path\
       }\
+      folder {\
+        path\
+      }\
     }\
   }";
 
@@ -350,7 +360,7 @@ function matchRuleWithGalleryId(id) {
 
   matchFilePaths(
     result.findGallery.id,
-    result.findGallery.files,
+    result.findGallery.files.concat([result.findGallery.folder]),
     applyGalleryRule
   );
 }
