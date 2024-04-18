@@ -347,7 +347,7 @@ function matchRuleWithSceneId(sceneId) {
     throw "Missing scene for id: " + sceneId;
   }
 
-  matchFilePaths(sceneId, findScene.files, applySceneRule);
+  matchFilePaths(sceneId, result.findScene.files, applySceneRule);
 }
 
 function matchRuleWithGalleryId(galleryId) {
@@ -370,7 +370,7 @@ function matchRuleWithGalleryId(galleryId) {
     throw "Missing gallery for id: " + galleryId;
   }
 
-  matchFilePaths(galleryId, findScene.files, applySceneRule);
+  matchFilePaths(galleryId, result.findGallery.files, applySceneRule);
 }
 
 // Apply callback to first matching rule for path
