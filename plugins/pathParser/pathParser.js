@@ -666,7 +666,7 @@ function applySceneRule(id, fields, data) {
   }";
 
   var variables = applyRule(id, fields, data);
-  if (!any) {
+  if (!variables) {
     throw "No fields to update for scene " + id;
   }
 
@@ -688,7 +688,7 @@ function applyGalleryRule(id, fields, data) {
   }";
 
   var variables = applyRule(id, fields, data);
-  if (!any) {
+  if (!variables) {
     throw "No fields to update for gallery " + id;
   }
 
