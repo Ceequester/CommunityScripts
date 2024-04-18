@@ -594,7 +594,7 @@ function applyRule(id, fields, data) {
 }
 
 function createSet(fields) {
-  if (typeof Set !== 'undefined') {
+  if (typeof Set !== "undefined") {
     return new Set(fields);
   } else {
     var temp = {
