@@ -19,7 +19,7 @@ var rules = [
     fields: {
       studio: "#2",
       title: "#4",
-      tags: ["#3"],
+      tags: "#3",
     },
   },
   {
@@ -43,7 +43,7 @@ var rules = [
     fields: {
       studio: "#3",
       title: "#5",
-      tags: ["#4"],
+      tags: "#4",
     },
   },
 ];
