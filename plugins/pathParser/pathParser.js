@@ -693,11 +693,16 @@ function applyGalleryRule(id, fields, data) {
     }\
   }";
 
-  var variables = applyRule(id, fields, data);
-  if (!variables) {
+  var applied  = applyRule(id, fields, data);
+  if (!applied.success) {
     throw "No fields to update for gallery " + id;
   }
 
+  if (DEBUG) {
+    // Don't update the value when running tests
+    return;
+  }
+  var variables = applied.variables;
   var result = gql.Do(query, variables);
   if (!result.galleryUpdate) {
     throw "Unable to update gallery " + id;
