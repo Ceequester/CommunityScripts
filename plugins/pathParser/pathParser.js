@@ -257,11 +257,17 @@ function runRules(tag) {
     findScenes(scene_filter: $sceneFilter) {\
       scenes {\
         id\
+        files {\
+          path\
+        }\
       }\
     }\
     findGalleries(gallery_filter: $galleryFilter) {\
       galleries {\
         id\
+        files {\
+          path\
+        }\
       }\
     }\
   }";
@@ -291,14 +297,66 @@ function runRules(tag) {
 
   if (result.findScenes) {
     result.findScenes.scenes.forEach(function (scene) {
-      matchRuleWithSceneId(scene.id);
+      matchFilePaths(scene.id, scene.files, applySceneRule);
     });
   }
   if (result.findGalleries) {
     result.findGalleries.galleries.forEach(function (gallery) {
-      matchRuleWithGalleryId(gallery.id);
+      matchFilePaths(gallery.id, gallery.files, applyGalleryRule);
     });
   }
+}
+
+function matchRuleWithSceneId(id) {
+  var query =
+    "\
+  query FindScene($findId: ID!) {\
+    findScene(id: $findId) {\
+      id\
+      files {\
+        path\
+      }\
+    }\
+  }";
+
+  var variables = {
+    findId: id,
+  };
+
+  var result = gql.Do(query, variables);
+  if (!result.findScene || result.findScene.files.length == 0) {
+    throw "Missing scene for id: " + id;
+  }
+
+  matchFilePaths(result.findScene.id, result.findScene.files, applySceneRule);
+}
+
+function matchRuleWithGalleryId(id) {
+  var query =
+    "\
+  query FindGallery($findId: ID!) {\
+    findGallery(id: $findId) {\
+      id\
+      files {\
+        path\
+      }\
+    }\
+  }";
+
+  var variables = {
+    findId: id,
+  };
+
+  var result = gql.Do(query, variables);
+  if (!result.findGallery || result.findGallery.files.length == 0) {
+    throw "Missing gallery for id: " + id;
+  }
+
+  matchFilePaths(
+    result.findGallery.id,
+    result.findGallery.files,
+    applyGalleryRule
+  );
 }
 
 // Get scene/image id from input args
@@ -313,64 +371,20 @@ function getId(inputArgs) {
 function matchFilePaths(id, files, applyRuleCb) {
   for (var i = 0; i < files.length; i++) {
     try {
-      matchRuleWithPath(id, files[i].path, applyRuleCb);
-      logDebug(log.Info);
-      return;
+      var success = matchRuleWithPath(id, files[i].path, applyRuleCb);
+
+      logDebug(log.Debug);
+      if (success) {
+        return;
+      }
     } catch (e) {
       debug("Error matching rules for " + id + ": " + e.toString());
       logDebug(log.Error);
       continue;
     }
   }
+  debug("No rule matches id " + id);
   logDebug(log.Info);
-  throw "No rule matches id: " + id;
-}
-
-// Apply callback function to first matching rule for id
-function matchRuleWithSceneId(sceneId) {
-  var query =
-    "\
-  query FindScene($findSceneId: ID) {\
-    findScene(id: $findSceneId) {\
-      files {\
-        path\
-      }\
-    }\
-  }";
-
-  var variables = {
-    findSceneId: sceneId,
-  };
-
-  var result = gql.Do(query, variables);
-  if (!result.findScene || result.findScene.files.length == 0) {
-    throw "Missing scene for id: " + sceneId;
-  }
-
-  matchFilePaths(sceneId, result.findScene.files, applySceneRule);
-}
-
-function matchRuleWithGalleryId(galleryId) {
-  var query =
-    "\
-  query FindGallery($findGalleryId: ID!) {\
-    findGallery(id: $findGalleryId) {\
-      files {\
-        path\
-      }\
-    }\
-  }";
-
-  var variables = {
-    findGalleryId: galleryId,
-  };
-
-  var result = gql.Do(query, variables);
-  if (!result.findGallery || result.findGallery.files.length == 0) {
-    throw "Missing gallery for id: " + galleryId;
-  }
-
-  matchFilePaths(galleryId, result.findGallery.files, applyGalleryRule);
 }
 
 // Apply callback to first matching rule for path
@@ -406,12 +420,11 @@ function matchRuleWithPath(id, path, applyRuleCb) {
     var data = testRule(rules[i].pattern, parts);
     if (data !== null) {
       applyRuleCb(id, rules[i].fields, data);
-      return;
+      return true;
     }
   }
 
-  debug("No matching rule!");
-  throw "No matching rule for path: " + path;
+  return false;
 }
 
 // Test single rule
