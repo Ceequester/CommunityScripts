@@ -409,6 +409,7 @@ function matchRuleWithPath(id, path, applyRuleCb) {
 
 // Test single rule
 function testRule(pattern, parts) {
+  debug("Pattern: " + pattern.toString());
   if (pattern.length !== parts.length) {
     return null;
   }
