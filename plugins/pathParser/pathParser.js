@@ -313,7 +313,7 @@ function getId(inputArgs) {
 function matchFilePaths(id, files, applyRuleCb) {
   for (var i = 0; i < files.length; i++) {
     try {
-      matchRuleWithPath(sceneId, files[i].path, applyRuleCb);
+      matchRuleWithPath(id, files[i].path, applyRuleCb);
       logDebug(log.Info);
       return;
     } catch (e) {
@@ -323,7 +323,7 @@ function matchFilePaths(id, files, applyRuleCb) {
     }
   }
   logDebug(log.Info);
-  throw "No rule matches id: " + sceneId;
+  throw "No rule matches id: " + id;
 }
 
 // Apply callback function to first matching rule for id
@@ -657,12 +657,12 @@ function applySceneRule(id, fields, data) {
 
   var variables = applyRule(id, fields, data);
   if (!any) {
-    throw "No fields to update for scene " + sceneId;
+    throw "No fields to update for scene " + id;
   }
 
   var result = gql.Do(query, variables);
   if (!result.sceneUpdate) {
-    throw "Unable to update scene " + sceneId;
+    throw "Unable to update scene " + id;
   }
 }
 
