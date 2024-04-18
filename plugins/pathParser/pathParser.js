@@ -7,7 +7,7 @@ var patterns = {
 var rules = [
   {
     name: "1 Level Gallery Titling",
-    pattern: [["Websites", "Artists"], null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
+    pattern: [["Websites", "Artists"], null, null],
     fields: {
       studio: "#1",
       title: "#2",
@@ -15,7 +15,7 @@ var rules = [
   },
   {
     name: "2 Level Gallery Titling",
-    pattern: [["Websites", "Artists"], null, null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
+    pattern: [["Websites", "Artists"], null, null, null],
     fields: {
       studio: "#1",
       title: "#3",
@@ -24,14 +24,14 @@ var rules = [
   },
   {
     name: "0 Level Gallery Titling",
-    pattern: ["Unknown Images", null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
+    pattern: ["Unknown Images", null, null],
     fields: {
       title: "#2",
     },
   },
   {
     name: "1 Level Gallery Titling",
-    pattern: ["Unknown Images", null, null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
+    pattern: ["Unknown Images", null, null, null],
     fields: {
       studio: "#2",
       title: "#3",
@@ -39,7 +39,7 @@ var rules = [
   },
   {
     name: "2 Level Gallery Titling",
-    pattern: ["Unknown Images", null, null, null, /(.*)(\.cbz|\.cbr|\.zip|$)/],
+    pattern: ["Unknown Images", null, null, null, null],
     fields: {
       studio: "#2",
       title: "#4",
@@ -69,7 +69,7 @@ function debug(message) {
 }
 
 function logDebug(logCb) {
-  if (DEBUG && bufferedOutput !== null && bufferedOutput !== "") {
+  if (DEBUG && bufferedOutput !== null && bufferedOutput.length > 0) {
     logCb("[PathParser] " + bufferedOutput.join("\n> "));
     bufferedOutput = [];
   }
@@ -370,7 +370,7 @@ function matchRuleWithGalleryId(galleryId) {
     throw "Missing gallery for id: " + galleryId;
   }
 
-  matchFilePaths(galleryId, result.findGallery.files, applySceneRule);
+  matchFilePaths(galleryId, result.findGallery.files, applyGalleryRule);
 }
 
 // Apply callback to first matching rule for path
@@ -394,10 +394,10 @@ function matchRuleWithPath(id, path, applyRuleCb) {
   );
 
   for (var i = 0; i < rules.length; i++) {
+    debug("Rule: " + rules[i].name);
+    log.Debug("[PathParser] Rule: " + rules[i].name + "\nPath: " + path);
     var data = testRule(rules[i].pattern, parts);
     if (data !== null) {
-      debug("Rule: " + rules[i].name);
-      log.Debug("[PathParser] Rule: " + rules[i].name + "\nPath: " + path);
       applyRuleCb(id, rules[i].fields, data);
       return;
     }
