@@ -9,41 +9,41 @@ var rules = [
     name: "1 Level Gallery Titling",
     pattern: [null, ["Websites", "Artists"], null, null],
     fields: {
-      studio: "#1",
-      title: "#2",
+      studio: "#2",
+      title: "#3",
     },
   },
   {
     name: "2 Level Gallery Titling",
     pattern: [null, ["Websites", "Artists"], null, null, null],
     fields: {
-      studio: "#1",
-      title: "#3",
-      tags: ["#2"],
+      studio: "#2",
+      title: "#4",
+      tags: ["#3"],
     },
   },
   {
     name: "0 Level Gallery Titling",
     pattern: [null, "Unknown Images", null, null],
     fields: {
-      title: "#2",
+      title: "#3",
     },
   },
   {
     name: "1 Level Gallery Titling",
     pattern: [null, "Unknown Images", null, null, null],
     fields: {
-      studio: "#2",
-      title: "#3",
+      studio: "#3",
+      title: "#4",
     },
   },
   {
     name: "2 Level Gallery Titling",
     pattern: [null, "Unknown Images", null, null, null, null],
     fields: {
-      studio: "#2",
-      title: "#4",
-      tags: ["#3"],
+      studio: "#3",
+      title: "#5",
+      tags: ["#4"],
     },
   },
 ];
@@ -505,9 +505,12 @@ function applyRule(id, fields, data) {
 
   for (var field in fields) {
     var value = fields[field];
-    value.replace(/#\d+/, function (matched) {
+    value.replace(/\#\d+/, function (matched) {
+      debug(matched);
       return data[parseInt(matched.substring(1))];
     });
+
+    debug("Value: " + value);
 
     switch (field) {
       case "title":
@@ -665,11 +668,12 @@ function applySceneRule(id, fields, data) {
     }\
   }";
 
-  var variables = applyRule(id, fields, data);
-  if (!variables) {
+  var applied = applyRule(id, fields, data);
+  if (!applied.success) {
     throw "No fields to update for scene " + id;
   }
 
+  var variables = applied.variables;
   var result = gql.Do(query, variables);
   if (!result.sceneUpdate) {
     throw "Unable to update scene " + id;
