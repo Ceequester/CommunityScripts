@@ -313,7 +313,7 @@ function getId(inputArgs) {
 function matchFilePaths(id, files, applyRuleCb) {
   for (var i = 0; i < files.length; i++) {
     try {
-      matchRuleWithPath(sceneId, result.findScene.files[i].path, applyRuleCb);
+      matchRuleWithPath(sceneId, files[i].path, applyRuleCb);
       logDebug(log.Info);
       return;
     } catch (e) {
