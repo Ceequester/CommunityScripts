@@ -595,7 +595,7 @@ function applyRule(id, fields, data) {
       debug("No fields to update!");
     }
 
-    return false;
+    return { success: false };
   }
 
   // Remove movies if movie_id is missing
@@ -606,7 +606,7 @@ function applyRule(id, fields, data) {
     delete variables.input["movies"];
   }
 
-  return variables;
+  return { success: true, variables: variables };
 }
 
 function createSet(fields) {
