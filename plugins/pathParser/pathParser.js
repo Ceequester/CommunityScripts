@@ -395,7 +395,7 @@ function matchRuleWithPath(id, path, applyRuleCb) {
 
   for (var i = 0; i < rules.length; i++) {
     debug("Rule: " + rules[i].name);
-    log.Debug("[PathParser] Rule: " + rules[i].name + "\nPath: " + path);
+    log.Debug("[PathParser] Rule: " + rules[i].name + "\nPath: " + path + "\nParts: " + parts);
     var data = testRule(rules[i].pattern, parts);
     if (data !== null) {
       applyRuleCb(id, rules[i].fields, data);
