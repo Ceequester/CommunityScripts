@@ -52,10 +52,6 @@ var rules = [
 // DO NOT EDIT BELOW!
 ---------------------------------------------------------------------------- */
 function debug(message) {
-  if (!DEBUG) {
-    return;
-  }
-
   if (typeof message === "string") {
     bufferedOutput.push(message);
     return;
