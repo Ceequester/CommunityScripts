@@ -505,7 +505,7 @@ function applyRule(id, fields, data) {
 
   for (var field in fields) {
     var value = fields[field];
-    value.replace(/#\d+/, function (matched) {
+    value = value.replace(/#\d+/, function (matched) {
       debug([
         "Matched: " + matched,
         "Matched Substring: " + matched.substring(1),
