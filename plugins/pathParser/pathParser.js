@@ -377,6 +377,9 @@ function getId(inputArgs) {
 function matchFilePaths(id, files, applyRuleCb) {
   for (var i = 0; i < files.length; i++) {
     try {
+      if (typeof files[i].path === 'undefined') {
+        continue;
+      }
       var success = matchRuleWithPath(id, files[i].path, applyRuleCb);
 
       logDebug(log.Debug);
