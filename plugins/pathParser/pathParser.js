@@ -593,7 +593,23 @@ function applyRule(id, fields, data) {
   return variables;
 }
 
-var sceneFields = new Set([
+function createSet(fields) {
+  if (Set !== undefined) {
+    return new Set(fields);
+  } else {
+    var temp = {
+      has: function(key) {
+        return key in temp;
+      }
+    };
+    for (var i = 0; i < fields.length; i += 1) {
+      temp[fields[i]] = true;
+    }
+    return temp;
+  }
+}
+
+var sceneFields = createSet([
   "title",
   "studio",
   "director",
@@ -602,13 +618,14 @@ var sceneFields = new Set([
   "tags",
   "performers",
 ]);
-var galleryFields = new Set([
-  "title",
-  "studio",
-  "photographer",
-  "tags",
-  "performers",
-]);
+var galleryFields = createSet([
+    "title",
+    "studio",
+    "photographer",
+    "tags",
+    "performers",
+  ]);
+
 var validFields = {
   gallery: galleryFields,
   scene: sceneFields,
