@@ -7,7 +7,7 @@ var patterns = {
 var rules = [
   {
     name: "1 Level Gallery Titling",
-    pattern: [["Websites", "Artists"], null, null],
+    pattern: [null, ["Websites", "Artists"], null, null],
     fields: {
       studio: "#1",
       title: "#2",
@@ -15,7 +15,7 @@ var rules = [
   },
   {
     name: "2 Level Gallery Titling",
-    pattern: [["Websites", "Artists"], null, null, null],
+    pattern: [null, ["Websites", "Artists"], null, null, null],
     fields: {
       studio: "#1",
       title: "#3",
@@ -24,14 +24,14 @@ var rules = [
   },
   {
     name: "0 Level Gallery Titling",
-    pattern: ["Unknown Images", null, null],
+    pattern: [null, "Unknown Images", null, null],
     fields: {
       title: "#2",
     },
   },
   {
     name: "1 Level Gallery Titling",
-    pattern: ["Unknown Images", null, null, null],
+    pattern: [null, "Unknown Images", null, null, null],
     fields: {
       studio: "#2",
       title: "#3",
@@ -39,7 +39,7 @@ var rules = [
   },
   {
     name: "2 Level Gallery Titling",
-    pattern: ["Unknown Images", null, null, null, null],
+    pattern: [null, "Unknown Images", null, null, null, null],
     fields: {
       studio: "#2",
       title: "#4",
