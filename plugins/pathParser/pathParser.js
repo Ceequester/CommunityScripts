@@ -414,6 +414,8 @@ function testRule(pattern, parts) {
     return null;
   }
 
+  debug("Pattern length: " + pattern.length);
+  debug("Parts length: " + parts.length);
   var matchedParts = [];
   for (var i = 0; i < pattern.length; i++) {
     if ((subMatches = testPattern(pattern[i], parts[i])) == null) {
