@@ -589,13 +589,8 @@ function applyRule(id, fields, data) {
     }
   }
 
-  // Test only
-  if (DEBUG) {
-    if (!any) {
-      debug("No fields to update!");
-    }
-
-    return { success: false };
+  if (!any) {
+    debug("No fields to update!");
   }
 
   // Remove movies if movie_id is missing
@@ -606,7 +601,7 @@ function applyRule(id, fields, data) {
     delete variables.input["movies"];
   }
 
-  return { success: true, variables: variables };
+  return { success: any, variables: variables };
 }
 
 function createSet(fields) {
@@ -676,6 +671,10 @@ function applySceneRule(id, fields, data) {
     throw "No fields to update for scene " + id;
   }
 
+  if (DEBUG) {
+    // Don't update the value when running tests
+    return;
+  }
   var variables = applied.variables;
   var result = gql.Do(query, variables);
   if (!result.sceneUpdate) {
