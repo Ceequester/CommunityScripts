@@ -353,7 +353,7 @@ function matchRuleWithSceneId(sceneId) {
 function matchRuleWithGalleryId(galleryId) {
   var query =
     "\
-  query FindGallery($findGalleryId: ID) {\
+  query FindGallery($findGalleryId: ID!) {\
     findGallery(id: $findGalleryId) {\
       files {\
         path\
