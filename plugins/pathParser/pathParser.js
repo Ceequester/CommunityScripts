@@ -693,7 +693,7 @@ function applyGalleryRule(id, fields, data) {
     }\
   }";
 
-  var applied  = applyRule(id, fields, data);
+  var applied = applyRule(id, fields, data);
   if (!applied.success) {
     throw "No fields to update for gallery " + id;
   }
