@@ -411,10 +411,12 @@ function matchRuleWithPath(id, path, applyRuleCb) {
   var parts = path.split(/[\\/]/);
 
   // Remove extension from filename
-  parts[parts.length - 1] = parts[parts.length - 1].slice(
-    0,
-    parts[parts.length - 1].lastIndexOf(".")
-  );
+  var fileIndex = parts.length - 1;
+  var filename = parts[fileIndex];
+  var extensionIndex = filename.lastIndexOf(".");
+  if (extensionIndex !== -1) {
+    parts[fileIndex] = filename.slice(0, extensionIndex);
+  }
 
   for (var i = 0; i < rules.length; i++) {
     debug("Rule: " + rules[i].name);
